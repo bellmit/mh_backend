@@ -1,0 +1,55 @@
+{
+	"device": {
+		"name": ${deviceName},
+		"type": "MHRelayDevice",
+		"firmware": "1.0.0",
+		"wakeUpInterval": 0,
+		"ip": "192.168.0.102",
+		
+		"controlInterface": {
+			"type": "MQTT",
+			"connectionString": "mh."${deviceName}".CONTROL"
+		},
+		"statusInterface": {
+			"type": "MQTT",
+			"connectionString": "mh."${deviceName}".STATUS"
+		}	
+		
+		"parameters": [
+			{
+				"name": "STATE",
+				"description": "possible values: ON/OFF"
+				"type": "boolean",			
+			}		
+		],
+		"commands": [
+			{
+				"command": "TOGGLE",
+				"description": "changes STATE ON/OFF",
+				"data": {				
+				}			
+			},
+			{
+				"command": "UPDATE",
+				"description": "command to update firmware",
+				"data": [
+					{
+						"elementName": "link",
+						"type": "string",
+						"description": "Path to the .bin file"
+					}
+				]
+			},
+		],		
+	},
+	"requestId": "dc923092-0b63-467d-bdfd-a7a3d0fcaedf",
+	"error": "",
+	"currentValues" : [
+		{		
+			"name": "STATE",
+			"value": "ON"
+		}
+	
+	]
+
+}

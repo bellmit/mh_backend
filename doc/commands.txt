@@ -1,0 +1,22 @@
+{
+	"id": "dc923092-0b63-467d-bdfd-a7a3d0fcaedf",
+	"command": "UPDATE",
+	"data": {
+		"link": "http://192.168.0.111:8080/assets/updates/relay.ino.d1.bin"
+	}
+}
+
+{
+	"id": "dc923092-0b63-467d-bdfd-a7a3d0fcaedf",
+	"command": "TOGGLE"
+}
+
+{
+	"id": "DISCOVER_ID",
+	"command": "DISCOVER"
+}
+
+{
+	"id": "IS_ALIVE_ID",
+	"command": "IS_ALIVE"
+}

@@ -1,5 +1,3 @@
 .idea/
-target/classes/
-target/maven*/
-target/*.jar.original
+target/
 mh_backend.iml
