@@ -1,0 +1,63 @@
+server:
+  port: 8080
+  servlet:
+    contextPath: /mh_backend
+mh:
+  version: 2.0.0
+  defaultDeviceReplyTimeout: 5 #default timeout for devices reply
+  deviceDiscoveryInterval: 30 #in seconds
+  isAliveRetryCount: 2
+---
+spring:
+  profiles: default
+camel:
+    ActiveMQ:
+      BrokerURL: tcp://192.168.0.111:61616
+xiaomi:
+  udp:
+    multicastAddress: "224.0.0.50"
+    gatewayDiscoveryPort: 4321
+    multicastPort: 9898
+    #password: zu4ek8hw7ulixmvs
+    password: yxo9u6wt7d22k2em
+    defaultUDPIncomingTimeout: 12 #in seconds
+datasource:
+    url: jdbc:mysql://192.168.0.111:3306/mh?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+    username: mh_user
+    password: mh_password
+    driverClassName: com.mysql.jdbc.Driver
+    defaultSchema:
+    maxPoolSize: 20
+    hibernate:
+       hbm2ddl.method: update
+       #hbm2ddl.method: none
+       show_sql: true
+       format_sql: true
+       dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+---
+spring:
+  profiles: local
+camel:
+    ActiveMQ:
+      BrokerURL: tcp://localhost:61616
+xiaomi:
+  udp:
+    multicastAddress: "224.0.0.50"
+    gatewayDiscoveryPort: 4321
+    multicastPort: 9898
+    #password: zu4ek8hw7ulixmvs
+    password: yxo9u6wt7d22k2em
+    defaultUDPIncomingTimeout: 12 #in seconds
+datasource:
+    url: jdbc:mysql://localhost:3306/mh?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+    username: root
+    password: root
+    driverClassName: com.mysql.jdbc.Driver
+    defaultSchema:
+    maxPoolSize: 20
+    hibernate:
+       #hbm2ddl.method: update
+       hbm2ddl.method: none
+       show_sql: true
+       format_sql: true
+       dialect: org.hibernate.dialect.MySQL5InnoDBDialect
