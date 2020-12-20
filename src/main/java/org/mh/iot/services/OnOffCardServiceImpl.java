@@ -7,11 +7,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by evolshan on 24.10.2018.
  */
-@Service("quickCardService")
+@Service("onOffCardService")
 @Transactional
 public class OnOffCardServiceImpl implements OnOffCardService {
 
@@ -27,5 +28,20 @@ public class OnOffCardServiceImpl implements OnOffCardService {
     @Override
     public OnOffCard saveCard(OnOffCard cardModel) {
         return onOffCardRepository.save(cardModel);
+    }
+
+    @Override
+    public List<OnOffCard> findAll() {
+        return onOffCardRepository.findAll();
+    }
+
+    @Override
+    public void deleteCard(long id) {
+        onOffCardRepository.deleteById(id);
+    }
+
+    @Override
+    public Optional<OnOffCard> findById(long id) {
+        return onOffCardRepository.findById(id);
     }
 }

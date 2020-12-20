@@ -30,7 +30,7 @@ public class CommandDataConverter implements AttributeConverter<List<DataItem>, 
 
     @Override
     public List<DataItem> convertToEntityAttribute(String s) {
-        TypeReference<ArrayList<String>> typeRef = new TypeReference<ArrayList<String>>(){};
+        TypeReference<ArrayList<DataItem>> typeRef = new TypeReference<ArrayList<DataItem>>(){};
         try {
             return objectMapper.readValue(s, typeRef);
         } catch (IOException e) {

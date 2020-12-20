@@ -58,7 +58,7 @@ public class Command {
     @Transient
     private ObjectMapper mapper = new ObjectMapper();
 
-    @JsonIgnore
+    @Transient
     private String id;
 
     public String getId() {

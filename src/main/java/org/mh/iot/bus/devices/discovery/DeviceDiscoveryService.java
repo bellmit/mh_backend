@@ -2,6 +2,8 @@ package org.mh.iot.bus.devices.discovery;
 
 import org.mh.iot.bus.devices.IOTDevice;
 import org.mh.iot.bus.devices.exception.CannotStopDeviceException;
+import org.mh.iot.bus.exception.DeviceNotOnlineException;
+import org.mh.iot.models.Device;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +20,8 @@ public interface DeviceDiscoveryService<T extends IOTDevice> {
     Logger logger = LoggerFactory.getLogger(DeviceDiscoveryService.class);
 
     void startDiscovering();
+    IOTDevice discoverByModel(Device device) throws DeviceNotOnlineException;
+
     //<deviceName, IOTDevice>
     Map<String, T> getOnlineDevices();
     void stopDiscovering();

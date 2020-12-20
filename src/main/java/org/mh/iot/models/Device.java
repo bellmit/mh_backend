@@ -26,23 +26,23 @@ public class Device {
     @Column(name="WAKE_UP_INTERVAL")
     private int wakeUpInterval = 0;
 
-    @Column(name="IP")
+    @Transient
     private String ip;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name="CONTROL_INTERFACE_ID", nullable = false)
     private Interface controlInterface;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name="STATUS_INTERFACE_ID", nullable = false)
     private Interface statusInterface;
 
-    @OneToMany(cascade = CascadeType.ALL,
-            mappedBy = "device")
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "DEVICE_ID")
     private List<Parameter> parameters = new ArrayList<>();
 
-    @OneToMany(cascade = CascadeType.ALL,
-            mappedBy = "device")
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "DEVICE_ID")
     private List<Command> commands = new ArrayList<>();
 
     public String getName() {

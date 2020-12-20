@@ -2,11 +2,14 @@ package org.mh.iot.bus.devices.discovery;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.mh.iot.bus.devices.IOTDevice;
 import org.mh.iot.bus.devices.exception.CannotInitializeDeviceException;
 import org.mh.iot.bus.devices.implementation.xiaomi.*;
 import org.mh.iot.bus.devices.interfaces.exceptions.CannotSendMessage;
 import org.mh.iot.bus.devices.interfaces.exceptions.MessageNotReceived;
 import org.mh.iot.bus.devices.interfaces.implementation.UDPInterface;
+import org.mh.iot.bus.exception.DeviceNotOnlineException;
+import org.mh.iot.models.Device;
 import org.mh.iot.models.commands.xiaomi.GetIdListCommand;
 import org.mh.iot.models.commands.xiaomi.ReadCommand;
 import org.mh.iot.models.commands.xiaomi.WhoisCommand;
@@ -67,6 +70,11 @@ public class XiaomiDiscoveryService implements DeviceDiscoveryService<XiaomiDevi
         isStarted = true;
         thread = new Thread(this, "XiaomiDiscSrv");
         thread.start();
+    }
+
+    @Override
+    public IOTDevice discoverByModel(Device device) throws DeviceNotOnlineException {
+        throw new DeviceNotOnlineException("Not implemented for xiaomi devices");
     }
 
     @Override

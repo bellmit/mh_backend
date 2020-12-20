@@ -4,6 +4,8 @@ import org.mh.iot.bus.devices.IOTDevice;
 import org.mh.iot.bus.devices.discovery.MHDeviceDiscoveryService;
 import org.mh.iot.bus.devices.discovery.XiaomiDiscoveryService;
 import org.mh.iot.bus.devices.implementation.xiaomi.XiaomiDevice;
+import org.mh.iot.bus.exception.DeviceNotOnlineException;
+import org.mh.iot.models.Device;
 import org.mh.iot.models.commands.Command;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,5 +48,14 @@ public class DiscoveryService {
     public void end(){
         mhDeviceDiscoveryService.stopDiscovering();
         xiaomiDiscoveryService.stopDiscovering();
+    }
+
+    public IOTDevice tryToDiscoverByModel(Device device) throws DeviceNotOnlineException {
+        if (device.getType().toUpperCase().startsWith("MH")) //for MH devices
+            return mhDeviceDiscoveryService.discoverByModel(device);
+         else if (device.getType().toUpperCase().startsWith("XIAOMI"))
+            return xiaomiDiscoveryService.discoverByModel(device);
+         else
+            throw new DeviceNotOnlineException("Not known device type");
     }
 }

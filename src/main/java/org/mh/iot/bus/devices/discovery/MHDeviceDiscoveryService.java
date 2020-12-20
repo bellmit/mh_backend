@@ -2,12 +2,16 @@ package org.mh.iot.bus.devices.discovery;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mh.iot.bus.CallbackBean;
+import org.mh.iot.bus.devices.IOTDevice;
 import org.mh.iot.bus.devices.exception.CannotInitializeDeviceException;
 import org.mh.iot.bus.devices.implementation.MHDevice;
 import org.mh.iot.bus.devices.interfaces.exceptions.CannotSendMessage;
 import org.mh.iot.bus.devices.interfaces.exceptions.CannotStartConsumerException;
+import org.mh.iot.bus.devices.interfaces.exceptions.MessageNotReceived;
 import org.mh.iot.bus.devices.interfaces.implementation.MQTTInterface;
 import org.mh.iot.bus.devices.interfaces.implementation.MQTTInterfaceFactory;
+import org.mh.iot.bus.devices.interfaces.implementation.StatusMessageIdSelector;
+import org.mh.iot.bus.exception.DeviceNotOnlineException;
 import org.mh.iot.models.Device;
 import org.mh.iot.models.InterfaceType;
 import org.mh.iot.models.StatusMessage;
@@ -86,6 +90,22 @@ public class MHDeviceDiscoveryService implements DeviceDiscoveryService<MHDevice
     public void stopDiscovering(){
         stopAllDevices(onlineDevices);
         isStarted = false;
+    }
+
+    public IOTDevice discoverByModel(Device device) throws DeviceNotOnlineException{
+
+        try {
+            MHDevice mhDevice = ctx.getBean(MHDevice.class);
+            mhDevice.init(device, null);
+            if (mhDevice.isAlive()){
+                onlineDevices.put(device.getName(), mhDevice);
+                return mhDevice;
+            } else {
+                throw new DeviceNotOnlineException("Device " + device.getName() + " not online");
+            }
+        } catch (CannotInitializeDeviceException ex) {
+            throw new DeviceNotOnlineException("Cannot discover by saved model. " + ex.getMessage());
+        }
     }
 
     private ObjectMapper objectMapper = new ObjectMapper();
