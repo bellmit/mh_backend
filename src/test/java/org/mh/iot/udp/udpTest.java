@@ -2,6 +2,7 @@ package org.mh.iot.udp;
 
 
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -19,6 +20,7 @@ public class udpTest {
     int MULTICAST_PORT = 9898;
 
     @Test
+    @Ignore
     public void sendToGateway() throws IOException {
         DatagramSocket socket = new DatagramSocket();
         String msg = "{\"cmd\":\"whois\"}";

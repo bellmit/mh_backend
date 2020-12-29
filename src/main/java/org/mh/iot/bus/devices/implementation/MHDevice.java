@@ -57,7 +57,7 @@ public class MHDevice extends IOTAbstractDevice implements IOTDevice, MHCompatib
         logger.info("Check device is alive: " + device.getName());
         if (device.getWakeUpInterval() > 0) { //wake up by timeout devices
             long curTimeInSeconds = System.currentTimeMillis() / 1000;
-            return lastDeviceActivity != null && (curTimeInSeconds - lastDeviceActivity) <= device.getWakeUpInterval() + 5;//time needed for device wakeup
+            return lastDeviceActivity != null && (curTimeInSeconds - lastDeviceActivity) <= device.getWakeUpInterval() * 2L + 5;//time needed for device wakeup
         } else { //always alive devices
             MHIsAliveCommand isAliveCommand = new MHIsAliveCommand();
             CommandReply isAliveReply = sendCommand(isAliveCommand);
@@ -68,6 +68,7 @@ public class MHDevice extends IOTAbstractDevice implements IOTDevice, MHCompatib
     @Override
     public void init(Device device, Map<String, String> initialValues) throws CannotInitializeDeviceException {
         this.device = device;
+        lastDeviceActivity = System.currentTimeMillis() / 1000;
         if (initialValues != null)
             this.currentValues.putAll(initialValues);
             mqttInterface = mqttInterfaceFactory.getMqttInterface(device.getControlInterface().getType(), device.getStatusInterface().getType());

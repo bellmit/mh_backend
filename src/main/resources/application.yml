@@ -9,7 +9,7 @@ mh:
   isAliveRetryCount: 2
 ---
 spring:
-  profiles: default
+  profiles: default, prod
 camel:
     ActiveMQ:
       BrokerURL: tcp://192.168.0.111:61616
