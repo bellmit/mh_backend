@@ -64,6 +64,12 @@ public class XiaomiGateway extends XiaomiDevice implements MHCompatibleDevice<Wh
     @Value("${xiaomi.udp.password}")
     private String password;
 
+    @Value("${xiaomi.commandRetryCount}")
+    private final int commandRetryCount = 0;
+
+    @Value("${xiaomi.commandRetryInterval}")
+    private final int commandRetryInterval = 0;
+
     private Optional<String> key = Optional.empty();
 
     private Cipher cipher;
@@ -216,17 +222,24 @@ public class XiaomiGateway extends XiaomiDevice implements MHCompatibleDevice<Wh
                 json = json.replace("${KEY}", key.get());
             }
 
-            String unparsedMessage = udpInterface.sendRequest(json, device.getControlInterface().getConnectionString(), s -> true, defaultDeviceReplyTimeout);
-            if (unparsedMessage.contains("error")){
-                logger.error("Gateway command error: " + unparsedMessage);
-                return new CommandReply().code(CommandReply.Code.ERROR).message(unparsedMessage);
-            } else {
-                return new CommandReply().reply(buildStatusMessage().unparsedMessage(unparsedMessage)).code(CommandReply.Code.OK);
+            String unparsedMessage = "";
+            for (int i = -1; i < commandRetryCount; i++) { //retrying. if commandRetryCount == 0 then only 1 request
+                unparsedMessage = udpInterface.sendRequest(json, device.getControlInterface().getConnectionString(), s -> true, defaultDeviceReplyTimeout);
+                if (unparsedMessage.contains("error")){
+                    logger.error("Gateway command error: " + unparsedMessage);
+                } else {
+                    return new CommandReply().reply(buildStatusMessage().unparsedMessage(unparsedMessage)).code(CommandReply.Code.OK);
+                }
+                Thread.sleep(commandRetryInterval * 1000);
             }
+            return new CommandReply().code(CommandReply.Code.ERROR).message(unparsedMessage);
+
         } catch (CannotSendMessage e) {
             return new CommandReply().code(CommandReply.Code.ERROR).message("Cannot send message. " + e.getMessage());
         } catch (MessageNotReceived e) {
             return new CommandReply().code(CommandReply.Code.ERROR).message("Message receiving timeout. " + e.getMessage());
+        } catch (InterruptedException e) {
+            return new CommandReply().code(CommandReply.Code.ERROR).message("Command retry exception " + e.getMessage());
         }
     }
 

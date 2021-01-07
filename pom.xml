@@ -7,6 +7,7 @@
     <groupId>org.mh.iot</groupId>
     <artifactId>mh_backend</artifactId>
     <version>1.0.0</version>
+    <packaging>war</packaging>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -23,6 +24,13 @@
     </properties>
 
     <dependencies>
+        <!-- for building war file -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- apache camel core -->
         <dependency>
             <groupId>org.apache.camel</groupId>
@@ -105,7 +113,7 @@
     </dependencies>
 
     <build>
-        <finalName>${artifactId}</finalName>
+        <finalName>${project.artifactId}</finalName>
         <plugins>
 
             <plugin>

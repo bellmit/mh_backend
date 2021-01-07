@@ -2,6 +2,8 @@ package org.mh.iot.bus.devices.implementation.xiaomi;
 
 import org.apache.camel.json.simple.JsonObject;
 import org.mh.iot.models.*;
+import org.mh.iot.models.commands.Command;
+import org.mh.iot.models.commands.CommandReply;
 import org.mh.iot.models.commands.xiaomi.WriteCommand;
 import org.mh.iot.models.commands.xiaomi.reply.ReadReply;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -20,9 +22,34 @@ public class XiaomiSocket extends XiaomiSlaveDevice {
 
     //private static final Logger logger = LoggerFactory.getLogger(XiaomiSwitch.class);
 
+    private Command turnOn = null;
+    private Command turnOff = null;
+
+    @Override
+    public CommandReply sendCommand(Command command) {
+        Command commandToSend = command;
+        if (command.getCommand() != null) {
+            if (command.getCommand().equals("TOGGLE")) {
+                if (currentValues.get("status").toUpperCase().equals("ON")) {
+                    commandToSend = turnOff;
+                } else {
+                    commandToSend = turnOn;
+                }
+            }
+        }
+        return super.sendCommand(commandToSend);
+    }
 
     @Override
     public Device getDeviceDefinition(ReadReply base) {
+        turnOn = new WriteCommand(base.sid, new JsonObject(new HashMap<String, String>() {{
+            put("status", "on");
+        }})).command("TURN_ON");
+
+        turnOff = new WriteCommand(base.sid, new JsonObject(new HashMap<String, String>() {{
+            put("status", "off");
+        }})).command("TURN_OFF");
+
         return new Device().
                 name(base.sid).
                 firmware(base.model).
@@ -31,12 +58,9 @@ public class XiaomiSocket extends XiaomiSlaveDevice {
                 statusInterface((new Interface()).type(InterfaceType.XIAOMI_GATEWAY).connectionString(base.sid)).
                 commands(
                         Arrays.asList(
-                        new WriteCommand(base.sid, new JsonObject(new HashMap<String, String>() {{
-                            put("status", "on");
-                            }})).command("TURN_ON"),
-                        new WriteCommand(base.sid, new JsonObject(new HashMap<String, String>() {{
-                                put("status", "off");
-                            }})).command("TURN_OFF")
+                        turnOn,
+                        turnOff,
+                        new Command().command("TOGGLE")
                         )
                 )
                 .parameters(Arrays.asList(

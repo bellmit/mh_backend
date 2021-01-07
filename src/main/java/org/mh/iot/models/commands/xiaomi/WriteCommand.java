@@ -8,7 +8,7 @@ public class WriteCommand extends XiaomiCommand {
     public WriteCommand(String sid, JsonObject data) {
         this.sid = sid;
         this.data = data;
-        data.put("key", "${KEY}"); //!!!ToDo not tested
+        data.put("key", "${KEY}");
     }
 
     @Override

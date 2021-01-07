@@ -7,6 +7,11 @@ mh:
   defaultDeviceReplyTimeout: 5 #default timeout for devices reply
   deviceDiscoveryInterval: 30 #in seconds
   isAliveRetryCount: 2
+xiaomi:
+  udp:
+    defaultUDPIncomingTimeout: 12 #in seconds
+  commandRetryCount: 1
+  commandRetryInterval: 3 #in seconds
 ---
 spring:
   profiles: default, prod
@@ -20,7 +25,6 @@ xiaomi:
     multicastPort: 9898
     #password: zu4ek8hw7ulixmvs
     password: yxo9u6wt7d22k2em
-    defaultUDPIncomingTimeout: 12 #in seconds
 datasource:
     url: jdbc:mysql://192.168.0.111:3306/mh?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
     username: mh_user
@@ -47,7 +51,6 @@ xiaomi:
     multicastPort: 9898
     #password: zu4ek8hw7ulixmvs
     password: yxo9u6wt7d22k2em
-    defaultUDPIncomingTimeout: 12 #in seconds
 datasource:
     url: jdbc:mysql://localhost:3306/mh?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
     username: root

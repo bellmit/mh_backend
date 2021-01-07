@@ -55,9 +55,9 @@ public class MHDevice extends IOTAbstractDevice implements IOTDevice, MHCompatib
     @Override
     public boolean isAlive(){
         logger.info("Check device is alive: " + device.getName());
-        if (device.getWakeUpInterval() > 0) { //wake up by timeout devices
+        if (device.getWakeUpInterval() > 0) { //wake up for timeout devices
             long curTimeInSeconds = System.currentTimeMillis() / 1000;
-            return lastDeviceActivity != null && (curTimeInSeconds - lastDeviceActivity) <= device.getWakeUpInterval() * 2L + 5;//time needed for device wakeup
+            return lastDeviceActivity != null && (curTimeInSeconds - lastDeviceActivity) <= (device.getWakeUpInterval() + 20) * 2L;//20 Sec - device connection timeout
         } else { //always alive devices
             MHIsAliveCommand isAliveCommand = new MHIsAliveCommand();
             CommandReply isAliveReply = sendCommand(isAliveCommand);
