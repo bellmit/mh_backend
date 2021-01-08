@@ -43,6 +43,7 @@ public abstract class XiaomiSlaveDevice extends  XiaomiDevice implements MHCompa
         if (command == null){
             return new CommandReply().code(CommandReply.Code.ERROR).message("Unknown command. " + commandName);
         }
+
         return gateway.sendCommand(command);
     }
 

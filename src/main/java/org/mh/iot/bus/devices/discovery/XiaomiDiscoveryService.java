@@ -10,6 +10,7 @@ import org.mh.iot.bus.devices.interfaces.exceptions.MessageNotReceived;
 import org.mh.iot.bus.devices.interfaces.implementation.UDPInterface;
 import org.mh.iot.bus.exception.DeviceNotOnlineException;
 import org.mh.iot.models.Device;
+import org.mh.iot.models.commands.CommandReply;
 import org.mh.iot.models.commands.xiaomi.GetIdListCommand;
 import org.mh.iot.models.commands.xiaomi.ReadCommand;
 import org.mh.iot.models.commands.xiaomi.WhoisCommand;
@@ -112,47 +113,57 @@ public class XiaomiDiscoveryService implements DeviceDiscoveryService<XiaomiDevi
 
                 // discover slaves devices
                 GetIdListCommand command = new GetIdListCommand();
-                replyString = gateway.sendCommand(command).getReply().getUnparsedMessage();
-                GetIdListReply getIdListReply = objectMapper.readValue(replyString, GetIdListReply.class);
+                CommandReply commandReply = gateway.sendCommand(command);
+                if (commandReply.getCode() == CommandReply.Code.OK){
+                    //through the list of devices
+                    replyString = commandReply.getReply().getUnparsedMessage();
+                    GetIdListReply getIdListReply = objectMapper.readValue(replyString, GetIdListReply.class);
 
-                String[] slaveDevices = objectMapper.readValue(getIdListReply.data, String[].class);
-                for (String slaveDeviceSid : slaveDevices) {
-                    if (onlineDevices.containsKey(slaveDeviceSid)) //slave device already initialized
-                        continue;
-                    ReadCommand readCommand = new ReadCommand(slaveDeviceSid);
-                    replyString = gateway.sendCommand(readCommand).getReply().getUnparsedMessage();
-                    ReadReply readReply = objectMapper.readValue(replyString, ReadReply.class);
-                    XiaomiSlaveDevice slaveDevice;
-                    switch (XiaomiDeviceType.getTypeByModel(readReply.model)) {
-                        case XIAOMI_SOCKET: {
-                            slaveDevice = ctx.getBean(XiaomiSocket.class);
-                            break;
-                        }
-                        case XIAOMI_SWITCH: {
-                            slaveDevice = ctx.getBean(XiaomiSwitch.class);
-                            break;
-                        }
-                        default: {
-                            logger.error("Connected unknown device. Model: " + readReply.model);
-                            slaveDevice = null;
-                            break;
-                        }
-                    }
-                    if (slaveDevice != null) {
-                        slaveDevice.useGateway(gateway);
-                        TypeReference<HashMap<String, String>> typeRef = new TypeReference<HashMap<String, String>>() {};
-                        Map<String, String> currentValues = null;
-                        try {
-                            currentValues = objectMapper.readValue(readReply.data, typeRef);
-                        } catch (IOException e) {
-                            logger.error("Unexpected message data format: " + readReply.data);
+                    String[] slaveDevices = objectMapper.readValue(getIdListReply.data, String[].class);
+                    for (String slaveDeviceSid : slaveDevices) {
+                        if (onlineDevices.containsKey(slaveDeviceSid)) //slave device already initialized
+                            continue;
+                        ReadCommand readCommand = new ReadCommand(slaveDeviceSid);
+                        CommandReply slaveDeviceReply = gateway.sendCommand(readCommand);
+                        if (slaveDeviceReply.getCode() == CommandReply.Code.OK){
+                            //slave device replied
+                            replyString = slaveDeviceReply.getReply().getUnparsedMessage();
+                            ReadReply readReply = objectMapper.readValue(replyString, ReadReply.class);
+                            XiaomiSlaveDevice slaveDevice;
+                            switch (XiaomiDeviceType.getTypeByModel(readReply.model)) {
+                                case XIAOMI_SOCKET: {
+                                    slaveDevice = ctx.getBean(XiaomiSocket.class);
+                                    break;
+                                }
+                                case XIAOMI_SWITCH: {
+                                    slaveDevice = ctx.getBean(XiaomiSwitch.class);
+                                    break;
+                                }
+                                default: {
+                                    logger.error("Connected unknown device. Model: " + readReply.model);
+                                    slaveDevice = null;
+                                    break;
+                                }
+                            }
+                            if (slaveDevice != null) {
+                                slaveDevice.useGateway(gateway);
+                                TypeReference<HashMap<String, String>> typeRef = new TypeReference<HashMap<String, String>>() {};
+                                Map<String, String> currentValues = null;
+                                try {
+                                    currentValues = objectMapper.readValue(readReply.data, typeRef);
+                                } catch (IOException e) {
+                                    logger.error("Unexpected message data format: " + readReply.data);
+                                }
+
+                                slaveDevice.init(slaveDevice.getDeviceDefinition(readReply), currentValues);
+                                onlineDevices.put(slaveDevice.getDevice().getName(), slaveDevice);
+                                logger.info("Discovered new slave XIAOMI device: " + slaveDevice.getDevice().getName() + ". Model: " + readReply.model);
+                            }
                         }
 
-                        slaveDevice.init(slaveDevice.getDeviceDefinition(readReply), currentValues);
-                        onlineDevices.put(slaveDevice.getDevice().getName(), slaveDevice);
-                        logger.info("Discovered new slave XIAOMI device: " + slaveDevice.getDevice().getName() + ". Model: " + readReply.model);
                     }
                 }
+
             } catch (CannotSendMessage e) {
                 logger.error("Cannot send XIAOMI gateway discovery command. " + e.getMessage());
             } catch (MessageNotReceived messageNotReceived) {

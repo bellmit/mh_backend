@@ -1,23 +1,21 @@
 package org.mh.iot.bus.devices.implementation;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mh.iot.bus.CallbackBean;
-import org.mh.iot.bus.devices.MHCompatibleDevice;
-import org.mh.iot.bus.devices.exception.CannotStopDeviceException;
-import org.mh.iot.bus.devices.interfaces.exceptions.CannotStopConsumerException;
-import org.mh.iot.bus.devices.interfaces.implementation.MQTTInterfaceFactory;
-import org.mh.iot.models.DataItem;
-import org.mh.iot.models.commands.Command;
-import org.mh.iot.models.commands.CommandReply;
 import org.mh.iot.bus.devices.IOTAbstractDevice;
 import org.mh.iot.bus.devices.IOTDevice;
+import org.mh.iot.bus.devices.MHCompatibleDevice;
 import org.mh.iot.bus.devices.exception.CannotInitializeDeviceException;
+import org.mh.iot.bus.devices.exception.CannotStopDeviceException;
 import org.mh.iot.bus.devices.interfaces.exceptions.CannotSendMessage;
+import org.mh.iot.bus.devices.interfaces.exceptions.CannotStopConsumerException;
 import org.mh.iot.bus.devices.interfaces.exceptions.MessageNotReceived;
 import org.mh.iot.bus.devices.interfaces.implementation.MQTTInterface;
+import org.mh.iot.bus.devices.interfaces.implementation.MQTTInterfaceFactory;
 import org.mh.iot.bus.devices.interfaces.implementation.StatusMessageIdSelector;
 import org.mh.iot.models.Device;
 import org.mh.iot.models.StatusMessage;
+import org.mh.iot.models.commands.Command;
+import org.mh.iot.models.commands.CommandReply;
 import org.mh.iot.models.commands.MHIsAliveCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +26,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -54,7 +51,6 @@ public class MHDevice extends IOTAbstractDevice implements IOTDevice, MHCompatib
 
     @Override
     public boolean isAlive(){
-        logger.info("Check device is alive: " + device.getName());
         if (device.getWakeUpInterval() > 0) { //wake up for timeout devices
             long curTimeInSeconds = System.currentTimeMillis() / 1000;
             return lastDeviceActivity != null && (curTimeInSeconds - lastDeviceActivity) <= (device.getWakeUpInterval() + 20) * 2L;//20 Sec - device connection timeout
@@ -68,10 +64,11 @@ public class MHDevice extends IOTAbstractDevice implements IOTDevice, MHCompatib
     @Override
     public void init(Device device, Map<String, String> initialValues) throws CannotInitializeDeviceException {
         this.device = device;
-        lastDeviceActivity = System.currentTimeMillis() / 1000;
-        if (initialValues != null)
+        if (initialValues != null) {
+            lastDeviceActivity = System.currentTimeMillis() / 1000;
             this.currentValues.putAll(initialValues);
-            mqttInterface = mqttInterfaceFactory.getMqttInterface(device.getControlInterface().getType(), device.getStatusInterface().getType());
+        }
+        mqttInterface = mqttInterfaceFactory.getMqttInterface(device.getControlInterface().getType(), device.getStatusInterface().getType());
         try {
             mqttInterface.createDurableListener(device.getStatusInterface().getConnectionString(), new StatusBean());
         } catch (Exception ex){
@@ -125,7 +122,7 @@ public class MHDevice extends IOTAbstractDevice implements IOTDevice, MHCompatib
         public void gotMessage(String message) {
             try {
                 lastDeviceActivity = System.currentTimeMillis() / 1000;
-                logger.info("MHDevice: " + device.getName() + " got new message: " + message);
+                logger.debug("MHDevice: " + device.getName() + " got new message: " + message);
 
                 StatusMessage statusMessage = objectMapper.readValue(message, StatusMessage.class);
                 //statusMessage.getCurrentValues().forEach(item -> currentValues.put(item.getName(), item.getValue()));

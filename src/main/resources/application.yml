@@ -11,7 +11,7 @@ xiaomi:
   udp:
     defaultUDPIncomingTimeout: 12 #in seconds
   commandRetryCount: 1
-  commandRetryInterval: 3 #in seconds
+  commandRetryInterval: 1 #in seconds
 ---
 spring:
   profiles: default, prod
@@ -35,7 +35,7 @@ datasource:
     hibernate:
        #hbm2ddl.method: update
        hbm2ddl.method: none
-       show_sql: true
+       show_sql: false
        format_sql: true
        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
 ---
@@ -64,3 +64,36 @@ datasource:
        show_sql: true
        format_sql: true
        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+
+---
+spring:
+  profiles: test
+
+logging:
+  level:
+    root: ERROR
+    org.mh.iot.bus: DEBUG
+
+camel:
+  ActiveMQ:
+    BrokerURL: tcp://192.168.0.111:61616
+xiaomi:
+  udp:
+    multicastAddress: "224.0.0.50"
+    gatewayDiscoveryPort: 4321
+    multicastPort: 9898
+    #password: zu4ek8hw7ulixmvs
+    password: yxo9u6wt7d22k2em
+datasource:
+  url: jdbc:mysql://192.168.0.111:3306/mh?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+  username: mh_user
+  password: mh_password
+  driverClassName: com.mysql.jdbc.Driver
+  defaultSchema:
+  maxPoolSize: 20
+  hibernate:
+    #hbm2ddl.method: update
+    hbm2ddl.method: none
+    show_sql: false
+    format_sql: true
+    dialect: org.hibernate.dialect.MySQL5InnoDBDialect

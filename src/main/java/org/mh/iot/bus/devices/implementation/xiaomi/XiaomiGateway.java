@@ -1,6 +1,8 @@
 package org.mh.iot.bus.devices.implementation.xiaomi;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import org.mh.iot.bus.CallbackBean;
 import org.mh.iot.bus.devices.IOTAbstractDevice;
 import org.mh.iot.bus.devices.MHCompatibleDevice;
@@ -15,13 +17,11 @@ import org.mh.iot.bus.devices.interfaces.implementation.UDPInterface;
 import org.mh.iot.models.*;
 import org.mh.iot.models.commands.Command;
 import org.mh.iot.models.commands.CommandReply;
+import org.mh.iot.models.commands.xiaomi.GetIdListCommand;
 import org.mh.iot.models.commands.xiaomi.ReadCommand;
 import org.mh.iot.models.commands.xiaomi.WhoisCommand;
 import org.mh.iot.models.commands.xiaomi.XiaomiCommand;
-import org.mh.iot.models.commands.xiaomi.reply.GatewayHeartbeat;
-import org.mh.iot.models.commands.xiaomi.reply.ReadReply;
-import org.mh.iot.models.commands.xiaomi.reply.Report;
-import org.mh.iot.models.commands.xiaomi.reply.WhoisReply;
+import org.mh.iot.models.commands.xiaomi.reply.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,10 +65,10 @@ public class XiaomiGateway extends XiaomiDevice implements MHCompatibleDevice<Wh
     private String password;
 
     @Value("${xiaomi.commandRetryCount}")
-    private final int commandRetryCount = 0;
+    private int commandRetryCount;
 
     @Value("${xiaomi.commandRetryInterval}")
-    private final int commandRetryInterval = 0;
+    private int commandRetryInterval;
 
     private Optional<String> key = Optional.empty();
 
@@ -162,7 +162,7 @@ public class XiaomiGateway extends XiaomiDevice implements MHCompatibleDevice<Wh
             try {
                 TypeReference<HashMap<String, String>> typeRefMap = new TypeReference<HashMap<String, String>>(){};
                 ReadReply reply = objectMapper.readValue(message, ReadReply.class);
-                logger.info("Gateway got message: " + message);
+                logger.debug("Gateway got message: " + message);
 
                 switch(reply.cmd) {
                     case "report":
@@ -216,21 +216,30 @@ public class XiaomiGateway extends XiaomiDevice implements MHCompatibleDevice<Wh
                     return new CommandReply().code(CommandReply.Code.ERROR).message("Unknown command. " + commandName);
                 }
             }
-            //add key value
-            String json = command.getJson();
-            if (json.contains("${KEY}") && key.isPresent()){
-                json = json.replace("${KEY}", key.get());
-            }
 
             String unparsedMessage = "";
             for (int i = -1; i < commandRetryCount; i++) { //retrying. if commandRetryCount == 0 then only 1 request
+                //add key value
+                String json = command.getJson();
+                if (json.contains("${KEY}") && key.isPresent()){
+                    json = json.replace("${KEY}", key.get());
+                }
                 unparsedMessage = udpInterface.sendRequest(json, device.getControlInterface().getConnectionString(), s -> true, defaultDeviceReplyTimeout);
                 if (unparsedMessage.contains("error")){
                     logger.error("Gateway command error: " + unparsedMessage);
                 } else {
                     return new CommandReply().reply(buildStatusMessage().unparsedMessage(unparsedMessage)).code(CommandReply.Code.OK);
                 }
-                Thread.sleep(commandRetryInterval * 1000);
+                if (unparsedMessage.contains("Invalid key")) {
+                    // update key
+                    CommandReply commandReply = sendCommand(new GetIdListCommand());
+
+                    if (commandReply.getCode() == CommandReply.Code.OK) {
+                        GetIdListReply getIdListReply = objectMapper.readValue(commandReply.getReply().getUnparsedMessage(), GetIdListReply.class);
+                        updateKey(getIdListReply.token);
+                    }
+                }
+                Thread.sleep(commandRetryInterval * 1000L);
             }
             return new CommandReply().code(CommandReply.Code.ERROR).message(unparsedMessage);
 
@@ -239,7 +248,10 @@ public class XiaomiGateway extends XiaomiDevice implements MHCompatibleDevice<Wh
         } catch (MessageNotReceived e) {
             return new CommandReply().code(CommandReply.Code.ERROR).message("Message receiving timeout. " + e.getMessage());
         } catch (InterruptedException e) {
-            return new CommandReply().code(CommandReply.Code.ERROR).message("Command retry exception " + e.getMessage());
+            return new CommandReply().code(CommandReply.Code.ERROR).message("Command retry exception. " + e.getMessage());
+        } catch (IOException e) {
+            return new CommandReply().code(CommandReply.Code.ERROR).message("Cannot update key. " + e.getMessage());
+
         }
     }
 
